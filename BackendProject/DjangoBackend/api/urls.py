@@ -1,10 +1,13 @@
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
 from . import views
-from .views import UserDetailAPI
-from .views import register_user, verify_email
 
-from .views import WebexOpenIDCallbackView
+from .views import register_user, verify_email,user_login
+from .views import webex_login, webex_callback
+
+
+
+#from .views import WebexOpenIDCallbackView
 
 
 
@@ -15,23 +18,18 @@ from .views import WebexOpenIDCallbackView
 
 
 urlpatterns = [
-  
-   path('login/', 
-          jwt_views.TokenObtainPairView.as_view(), 
-          name ='token_obtain_pair'),
-   path('token/refresh/', 
-          jwt_views.TokenRefreshView.as_view(), 
-          name ='token_refresh'),
-
-     
+   
+    
     path('logout/', views.LogoutView.as_view(), name ='logout') , 
 
 
-    path("get-details",UserDetailAPI.as_view()),
+    path('login/', user_login, name='user_login'),
   # path('register',RegisterUser.as_view()),
      path('home/', views.HomeView.as_view(), name ='home'),
      path('register/', register_user, name='register_user'),
     path('verify/', verify_email, name='verify_email'),
-      path('webex/openid/callback/', WebexOpenIDCallbackView.as_view(), name='webex_openid_callback'),
+      path('webex/login/', webex_login, name='webex_login'),
+    path('webex/callback/', webex_callback, name='webex_callback'),
+   
 
 ]

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -53,8 +54,9 @@ INSTALLED_APPS = [
     "allauth.socialaccount", # <--
     "allauth.socialaccount.providers.google",
     "verify_email.apps.VerifyEmailConfig",
-    'djoser',
     'allauth.socialaccount.providers.oauth2',
+    'allauth.socialaccount.providers.openid',
+    
   
     
    
@@ -186,13 +188,15 @@ SIMPLE_JWT = {
      'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
      'ROTATE_REFRESH_TOKENS': True,
      'BLACKLIST_AFTER_ROTATION': True,
-     'AUTH_HEADER_TYPES': ('Bearer',),
+    
+   
 }
-AUTH_USER_MODEL = 'auth.User'
+#AUTH_USER_MODEL = 'auth.User'
 
 REST_FRAMEWORK = {
-    
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+
+     
+    'DEFAULT_AUTHENTICATION_CLASSES':(
         
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
@@ -207,7 +211,7 @@ AUTHENTICATION_BACKENDS = (
 
     # `allauth` specific authentication methods, such as login by e-mail
     'allauth.account.auth_backends.AuthenticationBackend',
-    'djoser.backends.jwt_auth.JWTCredentialsBackend',
+   
  
 
 )
@@ -219,26 +223,30 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.profile',
 ]
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY='344878746541-ofv3k0mipo0dhh7n5gk4tkjbkf2p2ovb.apps.googleusercontent.com'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET='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'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=' 935237227952-pqkfklui1jb7vico2j797q1p8433gn8t.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=' 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'
 
 SOCIAL_AUTH_FACEBOOK_APP_ID = '******'
 SOCIAL_AUTH_FACEBOOK_SECRET = 'xxxx'
 
-CORS_ORIGIN_ALLOW_ALL = True
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'   
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'ritiroy85257@gmail.com'
-EMAIL_HOST_PASSWORD = 'Riti@123'
+EMAIL_HOST_USER = "ritiroy85257@gmail.com"
+EMAIL_HOST_PASSWORD = "isklmbrksnqhajdf"
 
-SOCIALACCOUNT_PROVIDERS = {
-    'webex': {
-        'SCOPE': ['spark:all'],
-        'AUTH_PARAMS': {'access_type': 'offline'},
-        'METHOD': 'oauth2',
-        'VERIFIED_EMAIL': True,
-    }
-}
+WEBEX_CLIENT_ID = 'C3a01ef3a1d39871845e25385a390d648b324bd6e824752c7a409a6c596815202 '
+WEBEX_CLIENT_SECRET = ' 91d14a2b3eabcc082e5fc76ba0fa96790349aae3fddb0e9ee6a87b9afbb4a57c'
+WEBEX_REDIRECT_URI = 'http://192.168.11.8:8000/webex/callback/'
+WEBEX_AUTHORIZATION_URL = 'https://api.ciscospark.com/v1/authorize'
+WEBEX_ACCESS_TOKEN_URL = 'https://api.ciscospark.com/v1/access_token'
+
+
+
+
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+

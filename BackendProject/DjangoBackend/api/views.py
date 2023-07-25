@@ -12,44 +12,12 @@ from api.serializers import UserSerializer,RegisterSerializer,EmailVerificationS
 from django.contrib.auth.models import User
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
-from allauth.socialaccount.providers.oauth2.client import OAuth2Error
-from allauth.socialaccount.providers.oauth2.views import OAuth2Adapter
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-import json
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.http import JsonResponse
 import requests
-from openid.consumer import consumer
-
-from allauth.socialaccount.models import SocialAccount
-from allauth.socialaccount.providers.openid.views import (
-    OpenIDAdapter, OpenIDCallbackView
-)
-from allauth.socialaccount.providers.openid.client import OpenIDClient
-
-class WebexOpenIDClient(OpenIDClient):
-    def get_id_token_data(self, response):
-        return json.loads(response.content)
-
-class WebexOpenIDAdapter(OpenIDAdapter):
-    client_class = WebexOpenIDClient
-
-webex_openid_callback = WebexOpenIDAdapter()
-
-class WebexOpenIDCallbackView(OpenIDCallbackView):
-    def dispatch(self, request, *args, **kwargs):
-        # Handle the successful login here and obtain the user data from the ID token.
-        # You can save the user data to the Django user model or use it as needed.
-        return super().dispatch(request, *args, **kwargs)
-
-
-
-
-
-
-
-
-
-
-# Create your views here.
+from django.conf import settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class HomeView(APIView):
      
@@ -72,19 +40,25 @@ class LogoutView(APIView):
                return Response(status=status.HTTP_205_RESET_CONTENT)
           except Exception as e:
                return Response(status=status.HTTP_400_BAD_REQUEST)
-          
 
 
 # Class based view to Get User Details using Token Authentication
-class UserDetailAPI(APIView):
-  authentication_classes = (TokenAuthentication,)
-  permission_classes = (AllowAny,)
-  def get(self,request,*args,**kwargs):
-    user = User.objects.get(id=request.user.id)
-    serializer = UserSerializer(user)
-    return Response(serializer.data)
+@api_view(['POST'])
+def user_login(request):
+    if request.method == 'POST':
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            refresh = RefreshToken.for_user(user)
 
+            response_data = {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }
 
+            return Response(response_data)
+
+        return Response(serializer.errors,status=400)
 
 @api_view(['POST'])
 def register_user(request):
@@ -94,6 +68,7 @@ def register_user(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     
 
 
@@ -108,3 +83,32 @@ def verify_email(request):
 
 
 
+def webex_login(request):
+    authorize_url = f"{settings.WEBEX_AUTHORIZATION_URL}?client_id={settings.WEBEX_CLIENT_ID}&response_type=code&redirect_uri={settings.WEBEX_REDIRECT_URI}&scope=spark%3Aall%20spark%3Akms"
+    return JsonResponse({'url': authorize_url})
+
+def webex_callback(request):
+    code = request.GET.get('code')
+    access_token_response = requests.post(
+        settings.WEBEX_ACCESS_TOKEN_URL,
+        data={
+            'grant_type': 'authorization_code',
+            'client_id': settings.WEBEX_CLIENT_ID,
+            'client_secret': settings.WEBEX_CLIENT_SECRET,
+            'code': code,
+            'redirect_uri': settings.WEBEX_REDIRECT_URI,
+        }
+    )
+
+    if access_token_response.status_code == 200:
+        access_token_data = access_token_response.json()
+        access_token = access_token_data['access_token']
+        # Handle the access_token, store it in session, or authenticate the user
+        # For example:
+        # request.session['access_token'] = access_token
+        # or
+        # Authenticate the user based on the access_token
+
+        return JsonResponse({'message': 'Authentication successful.'})
+
+    return JsonResponse({'error': 'Authentication failed.'}, status=400)

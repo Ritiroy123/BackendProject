@@ -7,11 +7,23 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.mail import send_mail
 from django.conf import settings
 import jwt
+from django.contrib.auth import authenticate
 
-class UserSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = User
-    fields = ["id", "first_name", "last_name", "username"]
+from rest_framework import serializers
+from django.contrib.auth import authenticate
+
+class UserSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        user = authenticate(username=data['username'], password=data['password'])
+
+        if not user:
+            raise serializers.ValidationError('Invalid credentials. Please try again.')
+
+        data['user'] = user
+        return data
 
 class RegisterSerializer(serializers.ModelSerializer):
   
@@ -42,9 +54,9 @@ class RegisterSerializer(serializers.ModelSerializer):
     token = jwt.encode({'user_id': user.id}, settings.SECRET_KEY, algorithm='HS256')
     send_mail(
             'Account Verification',
-            f'Click the following link to verify your email: http://localhost:3000/verify/{token}',
+            f'Click the following link to verify your email: http://localhost:3000/login?token={token}',
             settings.EMAIL_HOST_USER,
-            [user.email],
+            [user.username],
             fail_silently=False,
         )
     
