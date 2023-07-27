@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-m3(gp!kewrtb1mg^f_-!b5f*)=*a_8r^46us@7qk9uqy!xp16q
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-SITE_ID = 1
+SITE_ID = 2
 #LOGIN_REDIRECT_URL = "/"
 
 
@@ -103,6 +103,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     
     
+    
 ]
 
 ROOT_URLCONF = 'DjangoBackend.urls'
@@ -120,6 +121,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
+               
                 # allauth specific context processors
 
                 
@@ -243,10 +245,5 @@ WEBEX_REDIRECT_URI = 'http://192.168.11.8:8000/webex/callback/'
 WEBEX_AUTHORIZATION_URL = 'https://api.ciscospark.com/v1/authorize'
 WEBEX_ACCESS_TOKEN_URL = 'https://api.ciscospark.com/v1/access_token'
 
-
-
-
-
 CORS_ORIGIN_ALLOW_ALL = True
-
 

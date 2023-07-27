@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
 
 from rest_framework.permissions import AllowAny
-from api.serializers import UserSerializer,RegisterSerializer,EmailVerificationSerializer
+from api.serializers import RegisterSerializer,EmailVerificationSerializer
 from django.contrib.auth.models import User
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
@@ -18,7 +18,18 @@ from django.http import JsonResponse
 import requests
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
+from api.serializers import UserSerializer,SendPasswordResetEmailSerializer, UserChangePasswordSerializer,  UserPasswordResetSerializer
+from django.contrib.auth import authenticate
 
+#from api.renderers import UserRenderer
+
+
+def get_tokens_for_user(user):
+  refresh = RefreshToken.for_user(user)
+  return {
+      'refresh': str(refresh),
+      'access': str(refresh.access_token),
+  }
 class HomeView(APIView):
      
    permission_classes = (IsAuthenticated, )
@@ -27,7 +38,6 @@ class HomeView(APIView):
                    
        return Response(content) 
    
-
 
 class LogoutView(APIView):
      permission_classes = (IsAuthenticated,)
@@ -43,22 +53,20 @@ class LogoutView(APIView):
 
 
 # Class based view to Get User Details using Token Authentication
-@api_view(['POST'])
-def user_login(request):
-    if request.method == 'POST':
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            refresh = RefreshToken.for_user(user)
+class UserLoginView(APIView):
+  def post(self, request, format=None):
+    serializer = UserSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.data.get('username')
+    password = serializer.data.get('password')
+    user = authenticate(username=username, password=password)
+    if user is not None:
+      token = get_tokens_for_user(user)
+      return Response({'token':token, 'msg':'Login Success'}, status=status.HTTP_200_OK)
+    else:
+      return Response({'errors':{'non_field_errors':['Email or Password is not Valid']}}, status=status.HTTP_404_NOT_FOUND)
 
-            response_data = {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }
 
-            return Response(response_data)
-
-        return Response(serializer.errors,status=400)
 
 @api_view(['POST'])
 def register_user(request):
@@ -68,9 +76,6 @@ def register_user(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    
-
 
 @api_view(['POST'])
 def verify_email(request):
@@ -79,6 +84,28 @@ def verify_email(request):
         if serializer.is_valid():
             return Response({'message': 'Email verified successfully.'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
+    
+
+
+class UserChangePasswordView(APIView):
+  permission_classes = [IsAuthenticated]
+  def post(self, request, format=None):
+    serializer = UserChangePasswordSerializer(data=request.data, context={'user':request.user})
+    serializer.is_valid(raise_exception=True)
+    return Response({'msg':'Password Changed Successfully'}, status=status.HTTP_200_OK)    
+  
+
+class SendPasswordResetEmailView(APIView):
+  def post(self, request, format=None):
+    serializer = SendPasswordResetEmailSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    return Response({'msg':'Password Reset link send. Please check your Email'}, status=status.HTTP_200_OK)
+
+class UserPasswordResetView(APIView):
+  def post(self, request, uid, token, format=None):
+    serializer = UserPasswordResetSerializer(data=request.data, context={'uid':uid, 'token':token})
+    serializer.is_valid(raise_exception=True)
+    return Response({'msg':'Password Reset Successfully'}, status=status.HTTP_200_OK)
 
 
 
