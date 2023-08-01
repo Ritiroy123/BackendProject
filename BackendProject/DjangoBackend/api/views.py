@@ -2,14 +2,11 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-
 from rest_framework.decorators import api_view, permission_classes
-
 from rest_framework import status
-
 from rest_framework.permissions import AllowAny
 from api.serializers import RegisterSerializer,EmailVerificationSerializer
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from django.shortcuts import redirect
@@ -18,11 +15,12 @@ from django.http import JsonResponse
 import requests
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
-from api.serializers import UserSerializer,SendPasswordResetEmailSerializer, UserChangePasswordSerializer,  UserPasswordResetSerializer
+from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserChangePasswordSerializer,  UserPasswordResetSerializer
 from django.contrib.auth import authenticate
 
 #from api.renderers import UserRenderer
 
+User = get_user_model()
 
 def get_tokens_for_user(user):
   refresh = RefreshToken.for_user(user)
@@ -54,17 +52,20 @@ class LogoutView(APIView):
 
 # Class based view to Get User Details using Token Authentication
 class UserLoginView(APIView):
+  
+  
   def post(self, request, format=None):
-    serializer = UserSerializer(data=request.data)
+    serializer = UserLoginSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    username = serializer.data.get('username')
+    email = serializer.data.get('email')
     password = serializer.data.get('password')
-    user = authenticate(username=username, password=password)
+    user = authenticate(email=email, password=password)
     if user is not None:
       token = get_tokens_for_user(user)
       return Response({'token':token, 'msg':'Login Success'}, status=status.HTTP_200_OK)
     else:
       return Response({'errors':{'non_field_errors':['Email or Password is not Valid']}}, status=status.HTTP_404_NOT_FOUND)
+    
 
 
 

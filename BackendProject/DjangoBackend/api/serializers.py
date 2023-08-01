@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.validators import UniqueValidator
@@ -12,37 +12,38 @@ from django.utils.encoding import smart_str, force_bytes, DjangoUnicodeDecodeErr
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
-
-class UserSerializer(serializers.ModelSerializer):
-  username = serializers.CharField(max_length=255)
+User = get_user_model()
+class UserLoginSerializer(serializers.ModelSerializer):
+  email = serializers.EmailField(max_length=255)
   class Meta:
     model = User
-    fields = ['username', 'password']
+    fields = ['email', 'password']
 
-class RegisterSerializer(serializers.ModelSerializer):
-  
-  password = serializers.CharField(
-    write_only=True, required=True, validators=[validate_password])
-  confirm_password = serializers.CharField(write_only=True, required=True)
+
+class  RegisterSerializer(serializers.ModelSerializer):
+  # We are writing this becoz we need confirm password field in our Registratin Request
+  password2 = serializers.CharField(style={'input_type':'password'}, write_only=True)
   class Meta:
     model = User
-    fields = ('username', 'first_name', 'last_name', 'password', 'confirm_password',
-          )
-    extra_kwargs = {
-      'first_name': {'required': True},
-      'last_name': {'required': True}
+    fields=['email', 'name', 'password', 'password2', 'phone_number']
+    extra_kwargs={
+      'password':{'write_only':True}
     }
+
+  # Validating Password and Confirm Password while Registration
   def validate(self, attrs):
-    if attrs['password'] != attrs['confirm_password']:
-      raise serializers.ValidationError(
-        {"password": "Password fields didn't match."})
+    password = attrs.get('password')
+    password2 = attrs.get('password2')
+    if password != password2:
+      raise serializers.ValidationError("Password and Confirm Password doesn't match")
     return attrs
   def create(self, validated_data):
     user = User.objects.create(
-      username=validated_data['username'],
-     
-      first_name=validated_data['first_name'],
-      last_name=validated_data['last_name']
+      email=validated_data['email'],
+      name=validated_data['name'],
+      phone_number=validated_data['phone_number']
+      
+
     )
     user.set_password(validated_data['password'])
     token = jwt.encode({'user_id': user.id}, settings.SECRET_KEY, algorithm='HS256')
@@ -50,7 +51,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             'Account Verification',
             f'Click the following link to verify your email: http://localhost:3000/login?token={token}',
             settings.EMAIL_HOST_USER,
-            [user.username],
+            [user.email],
             fail_silently=False,
         )
     

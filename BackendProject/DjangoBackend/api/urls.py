@@ -1,7 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
 from . import views
-
 from .views import register_user, verify_email
 from .views import webex_login, webex_callback
 from api.views import SendPasswordResetEmailView, UserChangePasswordView, UserPasswordResetView,UserLoginView
@@ -10,9 +9,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 #from .views import WebexOpenIDCallbackView
 
-urlpatterns = [
-   
-    
+urlpatterns = [ 
     path('logout/', views.LogoutView.as_view(), name ='logout') , 
      path('login/', UserLoginView.as_view(), name='login'),
      path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
