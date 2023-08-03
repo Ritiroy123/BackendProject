@@ -5,9 +5,16 @@ from .views import register_user, verify_email
 from .views import webex_login, webex_callback
 from api.views import SendPasswordResetEmailView, APIChangePasswordView, UserPasswordResetView,UserLoginView
 from rest_framework_simplejwt.views import TokenRefreshView
+#from .views import ImageUploadView
 
 
 #from .views import WebexOpenIDCallbackView
+#from .views import ProfileView
+from .views import UserProfilePictureView
+
+
+
+   
 
 urlpatterns = [ 
     path('logout/', views.LogoutView.as_view(), name ='logout') , 
@@ -22,5 +29,9 @@ urlpatterns = [
     path('changepassword/', APIChangePasswordView.as_view(), name='changepassword'),
     path('send-reset-password-email/', SendPasswordResetEmailView.as_view(), name='send-reset-password-email'),
     path('reset-password/<uid>/<token>/', UserPasswordResetView.as_view(), name='reset-password'),
-
+   #  path('upload/', ImageUploadView.as_view(), name='image-upload'),
+   # path('profile/', ProfileView.as_view(), name='profile'),
+   # path('profile/', ProfileView.as_view(), name='profile'),
+    path('upload/', UserProfilePictureView.as_view(), name='user_profile_picture'),
 ]
+

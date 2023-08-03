@@ -189,6 +189,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'api.User'
 
+
 SIMPLE_JWT = {
      'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
      'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -250,4 +251,7 @@ WEBEX_AUTHORIZATION_URL = 'https://api.ciscospark.com/v1/authorize'
 WEBEX_ACCESS_TOKEN_URL = 'https://api.ciscospark.com/v1/access_token'
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 

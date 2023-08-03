@@ -3,6 +3,8 @@ from django.contrib import admin
 from api.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
+
+
 class UserModelAdmin(BaseUserAdmin):
   # The fields to be used in displaying the User model.
   # These override the definitions on the base UserModelAdmin

@@ -12,8 +12,18 @@ from django.utils.encoding import smart_str, force_bytes, DjangoUnicodeDecodeErr
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework.serializers import Serializer
+#from .models import Profile
 
+#from .models import Image
 User = get_user_model()
+
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email','name','phone_number' 'profile_picture']
+
+
 class UserLoginSerializer(serializers.ModelSerializer):
   email = serializers.EmailField(max_length=255)
   class Meta:
@@ -155,4 +165,4 @@ class UserPasswordResetSerializer(serializers.Serializer):
     except DjangoUnicodeDecodeError as identifier:
       PasswordResetTokenGenerator().check_token(user,token)
       raise serializers.ValidationError('Token is not Valid or Expired')
- 
+    

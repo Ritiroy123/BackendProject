@@ -16,12 +16,41 @@ import requests
 from rest_framework.generics import UpdateAPIView
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
-from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserPasswordChangeSerializer,  UserPasswordResetSerializer
+from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserPasswordChangeSerializer, UserPasswordResetSerializer
 from django.contrib.auth import authenticate
-
-#from api.renderers import UserRenderer
-
+from rest_framework.parsers import MultiPartParser, FormParser
+#from .models import Profile
+#from .serializers import ProfileSerializer
+from .serializers import CustomUserSerializer
 User = get_user_model()
+
+
+class UserProfilePictureView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def get(self, request, *args, **kwargs):
+        # Get the profile picture of the authenticated user
+        try:
+            user = User.objects.get(pk=request.user.pk)
+            serializer = CustomUserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request, *args, **kwargs):
+        # Update the profile picture of the authenticated user
+        try:
+            user = User.objects.get(pk=request.user.pk)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # Update the profile picture with the request data
+        serializer = CustomUserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 def get_tokens_for_user(user):
   refresh = RefreshToken.for_user(user)
@@ -63,7 +92,7 @@ class UserLoginView(APIView):
       token = get_tokens_for_user(user)
       return Response({'token':token, 'msg':'Login Success'}, status=status.HTTP_200_OK)
     else:
-      return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+      return Response({'login failed.'}, status=status.HTTP_404_NOT_FOUND)
     
 
 @api_view(['POST'])
@@ -103,6 +132,9 @@ class UserPasswordResetView(APIView):
     serializer = UserPasswordResetSerializer(data=request.data, context={'uid':uid, 'token':token})
     serializer.is_valid(raise_exception=True)
     return Response({'msg':'Password Reset Successfully'}, status=status.HTTP_200_OK)
+  
+
+
 
 
 
