@@ -16,7 +16,7 @@ import requests
 from rest_framework.generics import UpdateAPIView
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
-from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserPasswordChangeSerializer, UserPasswordResetSerializer
+from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserPasswordChangeSerializer, UserPasswordResetSerializer,workInfoSerializer
 from django.contrib.auth import authenticate
 from rest_framework.parsers import MultiPartParser, FormParser
 #from .models import Profile
@@ -168,3 +168,33 @@ def webex_callback(request):
         return JsonResponse({'message': 'Authentication successful.'})
 
     return JsonResponse({'error': 'Authentication failed.'}, status=400)
+
+
+
+class workInfoView(APIView):
+  
+  def get(self,request,*args, **kwargs):
+        # Get the value  of the authenticated user
+        try:
+            user = User.objects.get(pk=request.user.pk)
+            serializer =  workInfoSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+      
+  def post(self, request,*args, **kwargs):
+      try:
+            user = User.objects.get(pk=request.user.pk)
+      except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # Update the profile picture with the request data
+      serializer = workInfoSerializer(user, data=request.data)
+      if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+      else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+   
+  

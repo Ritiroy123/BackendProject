@@ -3,7 +3,7 @@ from rest_framework_simplejwt import views as jwt_views
 from . import views
 from .views import register_user, verify_email
 from .views import webex_login, webex_callback
-from api.views import SendPasswordResetEmailView, APIChangePasswordView, UserPasswordResetView,UserLoginView
+from api.views import SendPasswordResetEmailView, APIChangePasswordView, UserPasswordResetView,UserLoginView, workInfoView
 from rest_framework_simplejwt.views import TokenRefreshView
 #from .views import ImageUploadView
 
@@ -33,5 +33,6 @@ urlpatterns = [
    # path('profile/', ProfileView.as_view(), name='profile'),
    # path('profile/', ProfileView.as_view(), name='profile'),
     path('upload/', UserProfilePictureView.as_view(), name='user_profile_picture'),
+    path('info/', workInfoView.as_view(), name='work_Info_View'),
 ]
 

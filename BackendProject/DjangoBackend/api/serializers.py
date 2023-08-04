@@ -12,7 +12,7 @@ from django.utils.encoding import smart_str, force_bytes, DjangoUnicodeDecodeErr
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework.serializers import Serializer
-#from .models import Profile
+from .models import checklist
 
 #from .models import Image
 User = get_user_model()
@@ -166,3 +166,9 @@ class UserPasswordResetSerializer(serializers.Serializer):
       PasswordResetTokenGenerator().check_token(user,token)
       raise serializers.ValidationError('Token is not Valid or Expired')
     
+
+class workInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = checklist
+        fields = '__all__'
+        
