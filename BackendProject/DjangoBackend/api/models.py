@@ -88,69 +88,67 @@ class User(AbstractBaseUser):
   
 
 class checklist(models.Model):
-    project_name = models.TextField(blank=False,null=False)
-    project_name1 = models.TextField(default=None,blank=False,null=False)
-    project_location = models.TextField(blank=False,null=False)
-    project_location1 = models.TextField(default=None,blank=True,null=False)
-    supervisor_name = models.TextField(blank=False,null=False)
-    subcontractor_name = models.TextField(blank=False,null=False)
-    work_start_date = models.DateField(default=None,null=False)
-    work_start_date1 = models.DateField(default=None,null=False)
-    work_completion_date = models.DateField(default=None,null=False)
-    work_completion_date1 = models.DateField(default=None,null=False)
-    wcp_esic_verification_status = models.TextField(blank=False,null=False)
-    wcp_esic_verification = models.TextField(blank=False,null=False)
-    aadhar_card_verification_status = models.TextField(default=None,blank=True,null=False)
+    project_name = models.TextField(default = None,blank=False,null=False)
+  
+    project_location = models.TextField(default = None,blank=False,null=False)
+ 
+    supervisor_name = models.TextField(default = None,blank=False,null=False)
+    subcontractor_name = models.TextField(default = None,blank=False,null=False)
+    work_start_end_date = models.DateField(default=None,null=False)
+   
+    wcp_esic_verification = models.TextField(default = None,blank=False,null=False)
+   
     aadhar_card_verification = models.TextField(default=None,blank=True,null=False)
-    before_entry_body_scanning_status = models.TextField(blank=False,null=False)
-    before_entry_body_scanning = models.TextField(blank=False,null=False)
-    before_entry_bag_check_status = models.TextField(blank=False,null=False)
-    before_entry_bag_check = models.TextField(blank=False,null=False)
-    physical_appearance_status = models.TextField(blank=False,null=False)
-    physical_appearance = models.TextField(blank=False,null=False)
-    before_entry_bag_tales_and_tool_check_status = models.TextField(blank=False,null=False)
-    before_entry_bag_tales_and_tool_check = models.TextField(blank=False,null=False)
-    before_entry_bag_mental_health_check_status = models.TextField(blank=False,null=False)
-    before_entry_bag_mental_health_check = models.TextField(blank=False,null=False)
-    physical_health_check_status = models.TextField(blank=False,null=False)
-    physical_health_check = models.TextField(blank=False,null=False)
-    before_entry_bag_behavioral_check_status = models.TextField(blank=False,null=False)
-    before_entry_bag_behavioral_check = models.TextField(blank=False,null=False)
-    before_entry_bag_safety_helmet_check_status = models.TextField(blank=False,null=False)
-    before_entry_bag_safety_helmet_check = models.TextField(blank=False,null=False)
-    before_entry_bag_safety_shoes_check_status = models.TextField(blank=False,null=False)
-    before_entry_bag_safety_shoes_check = models.TextField(blank=False,null=False)
-    before_entry_bag_safety_jackets_check_status = models.TextField(blank=False,null=False)
-    before_entry_bag_safety_jackets_check = models.TextField(blank=False,null=False)
-    ladders_health_check_status = models.TextField(blank=False,null=False)
-    ladders_health_check = models.TextField(blank=False,null=False)
-    work_place_check_status= models.TextField(blank=False,null=False)
-    work_place_check = models.TextField(blank=False,null=False)
-    work_place_cleanliness_check_status = models.TextField(blank=False,null=False)
-    work_place_cleanliness_check = models.TextField(blank=False,null=False)
-    balance_material_on_specified_area_check_status = models.TextField(blank=False,null=False)
-    balance_material_on_specified_area_check = models.TextField(blank=False,null=False)
-    ladders_placement_check_status = models.TextField(blank=False,null=False)
-    ladders_placement_check = models.TextField(blank=False,null=False)
-    before_exit_body_scanning_status = models.TextField(blank=False,null=False)
-    before_exit_body_scanning = models.TextField(blank=False,null=False)
-    before_exit_bag_check_status = models.TextField(blank=False,null=False)
-    before_exit_bag_check = models.TextField(blank=False,null=False)
-    before_exit_bag_tales_and_tool_check_status = models.TextField(blank=False,null=False)
-    before_exit_bag_tales_and_tool_check = models.TextField(blank=False,null=False)
-    before_exit_bag_mental_health_check_status = models.TextField(blank=False,null=False)
-    before_exit_bag_mental_health_check = models.TextField(blank=False,null=False)
-    before_exit_bag_behavioral_check_status = models.TextField(blank=False,null=False)
-    before_exit_bag_behavioral_check = models.TextField(blank=False,null=False)
-    before_exit_bag_safety_helmet_check_status = models.TextField(blank=False,null=False)
-    before_exit_bag_safety_helmet_check = models.TextField(blank=False,null=False)
-    before_exit_bag_safety_shoes_check_status = models.TextField(blank=False,null=False)
-    before_exit_bag_safety_shoes_check = models.TextField(blank=False,null=False)
-    before_exit_bag_safety_jackets_check_status = models.TextField(blank=False,null=False)
-    before_exit_bag_safety_jackets_check = models.TextField(blank=False,null=False)
+    
+    before_entry_body_scanning = models.TextField(default = None,blank=False,null=False)
+   
+    before_entry_bag_check = models.TextField(default = None,blank=False,null=False)
+  
+    physical_appearance = models.TextField(default = None,blank=False,null=False)
+    
+    before_entry_bag_tales_and_tool_check = models.TextField(default = None,blank=False,null=False)
+   
+    before_entry_bag_mental_health_check = models.TextField(default = None,blank=False,null=False)
+    
+    physical_health_check = models.TextField(default = None,blank=False,null=False)
+   
+    before_entry_bag_behavioral_check = models.TextField(default = None,blank=False,null=False)
+   
+    before_entry_bag_safety_helmet_check = models.TextField(default = None,blank=False,null=False)
+    
+    before_entry_bag_safety_shoes_check = models.TextField(default = None,blank=False,null=False)
+    
+    before_entry_bag_safety_jackets_check = models.TextField(default = None,blank=False,null=False)
+    
+    ladders_health_check = models.TextField(default = None,blank=False,null=False)
+   
+    work_place_check = models.TextField(default = None,blank=False,null=False)
+ 
+    work_place_cleanliness_check = models.TextField(default = None,blank=False,null=False)
+   
+    balance_material_on_specified_area_check = models.TextField(default = None,blank=False,null=False)
+    
+    ladders_placement_check = models.TextField(default = None,blank=False,null=False)
+   
+    before_exit_body_scanning = models.TextField(default = None,blank=False,null=False)
+   
+    before_exit_bag_check = models.TextField(default = None,blank=False,null=False)
+    
+    before_exit_bag_tales_and_tool_check = models.TextField(default = None,blank=False,null=False)
+   
+    before_exit_bag_mental_health_check = models.TextField(default = None,blank=False,null=False)
+    
+    before_exit_bag_behavioral_check = models.TextField(default = None,blank=False,null=False)
+   
+    before_exit_bag_safety_helmet_check = models.TextField(default = None,blank=False,null=False)
+  
+    before_exit_bag_safety_shoes_check = models.TextField(default = None,blank=False,null=False)
+   
+    before_exit_bag_safety_jackets_check = models.TextField(default = None,blank=False,null=False)
+    remark = models.TextField(default = None,blank=False,null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    auto_increment_id = models.AutoField(primary_key=True,default=False)
+    auto_increment_id = models.AutoField(primary_key=True,default=None)
     user = models.ForeignKey(User,on_delete=models.CASCADE,blank=True,null=True)
 
 

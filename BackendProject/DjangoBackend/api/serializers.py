@@ -167,8 +167,10 @@ class UserPasswordResetSerializer(serializers.Serializer):
       raise serializers.ValidationError('Token is not Valid or Expired')
     
 
+    
+
 class workInfoSerializer(serializers.ModelSerializer):
-    class Meta:
+     class Meta:
         model = checklist
         fields = '__all__'
         

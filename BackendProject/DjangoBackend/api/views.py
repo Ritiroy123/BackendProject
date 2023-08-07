@@ -22,6 +22,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 #from .models import Profile
 #from .serializers import ProfileSerializer
 from .serializers import CustomUserSerializer
+from .models import checklist
 User = get_user_model()
 
 
@@ -171,30 +172,36 @@ def webex_callback(request):
 
 
 
+
 class workInfoView(APIView):
   
   def get(self,request,*args, **kwargs):
         # Get the value  of the authenticated user
         try:
-            user = User.objects.get(pk=request.user.pk)
-            serializer =  workInfoSerializer(user)
+            checklists = checklist.objects.all()
+            serializer = workInfoSerializer(checklists, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
       
   def post(self, request,*args, **kwargs):
-      try:
-            user = User.objects.get(pk=request.user.pk)
-      except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        # Update the profile picture with the request data
-      serializer = workInfoSerializer(user, data=request.data)
+      
+      print(request.data)
+      checklists = checklist.objects.all()
+      serializer = workInfoSerializer(data=request.data)
       if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
       else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-   
-  
+      
+#b=User(email="riti2345679@gmail.com",name="riti",phone_number="93546737")   
+#b.save()
+#a = checklist(project_name="qq",project_name1="a",project_location="a",project_location1="a",supervisor_name="q", subcontractor_name="a",work_start_date="2023-08-07",work_start_date1="2023-08-07",work_completion_date="2023-08-07",work_completion_date1="2023-08-07",wcp_esic_verification="Yes",aadhar_card_verification="Yes",before_entry_body_scanning="Yes",before_entry_bag_check="Yes",physical_appearance="Yes",before_entry_bag_tales_and_tool_check="Yes",before_entry_bag_mental_health_check="Yes",physical_health_check="Yes",before_entry_bag_behavioral_check="Yes",before_entry_bag_safety_helmet_check="Yes",before_entry_bag_safety_shoes_check="Yes",before_entry_bag_safety_jackets_check="Yes",ladders_health_check="Yes",work_place_check="Yes",work_place_cleanliness_check="Yes",balance_material_on_specified_area_check="Yes",ladders_placement_check="Yes",before_exit_body_scanning="Yes",before_exit_bag_check="Yes",before_exit_bag_tales_and_tool_check="Yes",before_exit_bag_mental_health_check="Yes",before_exit_bag_behavioral_check="Yes",before_exit_bag_safety_helmet_check="Yes",before_exit_bag_safety_shoes_check="Yes",before_exit_bag_safety_jackets_check="Yes",remark="ddd",user=b)
+#a =checklist.objects.filter(duplicate_id=0).count()
+#a= checklist.objects.get(pk = 1)
+#a.save()
+#print(b)
+#a=checklist.objects.all()
+#print(a)

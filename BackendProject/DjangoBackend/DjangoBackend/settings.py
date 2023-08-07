@@ -79,6 +79,7 @@ CORS_ALLOW_METHODS = [
 CORS_ALLOW_HEADERS = [
     'Accept',
     'Content-Type',
+   
 ]
 SOCIALACCOUNT_PROVIDERS = {
    'google': {
@@ -176,6 +177,7 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+USE_L10N = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -191,7 +193,7 @@ AUTH_USER_MODEL = 'api.User'
 
 
 SIMPLE_JWT = {
-     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),
      'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
      'ROTATE_REFRESH_TOKENS': True,
      'BLACKLIST_AFTER_ROTATION': True,
@@ -201,6 +203,7 @@ SIMPLE_JWT = {
 #AUTH_USER_MODEL = 'auth.User'
 
 REST_FRAMEWORK = {
+     'DATE_INPUT_FORMATS': [("%Y-%m-%d"),],
 
      
     'DEFAULT_AUTHENTICATION_CLASSES':(
@@ -255,4 +258,4 @@ CORS_ORIGIN_ALLOW_ALL = True
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
-DATE_FORMAT = "%Y-%m-%d"
+
