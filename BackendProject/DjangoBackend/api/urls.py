@@ -34,5 +34,7 @@ urlpatterns = [
    # path('profile/', ProfileView.as_view(), name='profile'),
     path('upload/', UserProfilePictureView.as_view(), name='user_profile_picture'),
     path('info/', workInfoView.as_view(), name='work_Info_View'),
+     path('getinfo/', views.workget, name='work_Info_View'),
+
 ]
 

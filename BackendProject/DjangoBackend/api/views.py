@@ -23,6 +23,11 @@ from rest_framework.parsers import MultiPartParser, FormParser
 #from .serializers import ProfileSerializer
 from .serializers import CustomUserSerializer
 from .models import checklist
+import json
+
+from django.core import serializers
+from django.views.decorators.csrf import csrf_exempt
+
 User = get_user_model()
 
 
@@ -187,7 +192,7 @@ class workInfoView(APIView):
       
   def post(self, request,*args, **kwargs):
       
-      print(request.data)
+      
       checklists = checklist.objects.all()
       serializer = workInfoSerializer(data=request.data)
       if serializer.is_valid(raise_exception=True):
@@ -205,3 +210,22 @@ class workInfoView(APIView):
 #print(b)
 #a=checklist.objects.all()
 #print(a)
+@csrf_exempt
+def workget(request):
+    if (request.method == "GET"):
+        #Serialize the data into json
+        data = serializers.serialize("json", checklist.objects.all())
+        # Turn the JSON data into a dict and send as JSON response
+        return JsonResponse(json.loads(data), safe=False)
+    
+    if (request.method == "POST"):
+        # Turn the body into a dict
+        body = json.loads(request.body.decode("utf-8"))
+        #create the new item
+        newrecord = checklist.objects.create(item=body['item'])
+        # Turn the object to json to dict, put in array to avoid non-iterable error
+        data=json.loads(serializers.serialize('json', [newrecord]))
+        # send json response with new object
+        return JsonResponse(data, safe=False)
+
+   
