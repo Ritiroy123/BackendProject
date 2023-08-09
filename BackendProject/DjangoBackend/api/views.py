@@ -11,18 +11,18 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework import generics
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponse
 import requests
 from rest_framework.generics import UpdateAPIView
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
-from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserPasswordChangeSerializer, UserPasswordResetSerializer,workInfoSerializer
+from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserPasswordChangeSerializer, UserPasswordResetSerializer,workInfoSerializer,getidSerializer
 from django.contrib.auth import authenticate
 from rest_framework.parsers import MultiPartParser, FormParser
 #from .models import Profile
 #from .serializers import ProfileSerializer
 from .serializers import CustomUserSerializer
-from .models import checklist
+from .models import checklist,User
 import json
 
 from django.core import serializers
@@ -181,16 +181,19 @@ def webex_callback(request):
 class workInfoView(APIView):
   
   def get(self,request,*args, **kwargs):
+        
         # Get the value  of the authenticated user
-        try:
-            checklists = checklist.objects.all()
-            serializer = workInfoSerializer(checklists, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            try:
+             
+                checklists = checklist.objects.all()
+                serializer = workInfoSerializer(checklists, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
 
-      
+        
   def post(self, request,*args, **kwargs):
+      
       
       
       checklists = checklist.objects.all()
@@ -212,12 +215,17 @@ class workInfoView(APIView):
 #print(a)
 @csrf_exempt
 def workget(request):
-    if (request.method == "GET"):
-        #Serialize the data into json
-        data = serializers.serialize("json", checklist.objects.all())
-        # Turn the JSON data into a dict and send as JSON response
-        return JsonResponse(json.loads(data), safe=False)
+    if request.method == 'GET':
+        checklists = checklist.objects.all()
     
+        fields_to_include = ['project_number', 'subcontractor_name','supervisor_name','project_location','worker_name','work_start_end_date','log_book_material','before_entry_bag_check','before_entry_clothing_and_appearance','before_entry_tools_and_equipments_check','physical_health','mental_health','before_entry_safety_helmet_check','before_entry_safety_shoes_check','before_entry_safety_jackets_check','']  # List all desired fields
+
+        data = [
+            {field: getattr(item, field) for field in fields_to_include}
+            for item in checklists
+        ]
+        return JsonResponse(data, safe=False)
+       
     if (request.method == "POST"):
         # Turn the body into a dict
         body = json.loads(request.body.decode("utf-8"))
@@ -229,3 +237,21 @@ def workget(request):
         return JsonResponse(data, safe=False)
 
    
+class ProductListView(APIView):
+    def get(self, request, format=None):
+        products = checklist.objects.all()
+        serializer = getidSerializer(products, many=True)
+        return Response(serializer.data)
+    
+
+class ChecklistUpdateView(APIView):
+        def put(self, request, *args, **kwargs):
+            auto_increment_id = self.kwargs['auto_increment_id']
+    
+    
+            checklists = checklist.objects.get(auto_increment_id=auto_increment_id)
+            serializer = workInfoSerializer(checklists, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    

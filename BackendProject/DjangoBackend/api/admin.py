@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from api.models import User
+from api.models import User,checklist
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
@@ -31,3 +31,4 @@ class UserModelAdmin(BaseUserAdmin):
 
 # Now register the new UserModelAdmin...
 admin.site.register(User, UserModelAdmin)
+admin.site.register(checklist)
