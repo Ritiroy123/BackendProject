@@ -180,3 +180,7 @@ class getidSerializer(serializers.ModelSerializer):
         fields = ('auto_increment_id','work_start_end_date')     
         
 
+class detailsSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = checklist
+      fields = ('project_number','subcontractor_name','supervisor_name','project_location','worker_name','work_start_end_date','log_book_material')

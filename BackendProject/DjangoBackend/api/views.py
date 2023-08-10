@@ -16,7 +16,7 @@ import requests
 from rest_framework.generics import UpdateAPIView
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
-from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserPasswordChangeSerializer, UserPasswordResetSerializer,workInfoSerializer,getidSerializer
+from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserPasswordChangeSerializer, UserPasswordResetSerializer,workInfoSerializer,getidSerializer,detailsSerializer
 from django.contrib.auth import authenticate
 from rest_framework.parsers import MultiPartParser, FormParser
 #from .models import Profile
@@ -24,7 +24,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import CustomUserSerializer
 from .models import checklist,User
 import json
-
+from datetime import datetime, timedelta
+from django.utils import timezone
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 
@@ -184,7 +185,7 @@ class workInfoView(APIView):
         
         # Get the value  of the authenticated user
             try:
-             
+               # user = User.objects.get(id=user_id)
                 checklists = checklist.objects.all()
                 serializer = workInfoSerializer(checklists, many=True)
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -195,14 +196,15 @@ class workInfoView(APIView):
   def post(self, request,*args, **kwargs):
       
       
-      
-      checklists = checklist.objects.all()
-      serializer = workInfoSerializer(data=request.data)
-      if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-      else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+       #user = User.objects.get(id=user_id)
+       checklists = checklist.objects.all()
+     # checklists = checklist.objects.all()
+       serializer = workInfoSerializer(data=request.data)
+       if serializer.is_valid(raise_exception=True):
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+       else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
       
 #b=User(email="riti2345679@gmail.com",name="riti",phone_number="93546737")   
 #b.save()
@@ -239,9 +241,14 @@ def workget(request):
    
 class ProductListView(APIView):
     def get(self, request, format=None):
-        products = checklist.objects.all()
-        serializer = getidSerializer(products, many=True)
+        seven_days_ago = timezone.now() - timedelta(days=2)
+        
+        # Filter checklist items with work_start_end_date within the last 7 days
+        items_within_7_days = checklist.objects.filter(work_start_end_date__gte=seven_days_ago)
+        
+        serializer = getidSerializer(items_within_7_days, many=True)
         return Response(serializer.data)
+
     
 
 class ChecklistUpdateView(APIView):
@@ -255,3 +262,14 @@ class ChecklistUpdateView(APIView):
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
+        
+
+class MainDetailView(APIView):
+  def get(self, request, auto_increment_id, format=None):
+        try:
+            item = checklist.objects.get(auto_increment_id=auto_increment_id)
+            serializer = detailsSerializer(item)
+            return Response(serializer.data)
+        except checklist.DoesNotExist:
+            return Response({"message": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
+        

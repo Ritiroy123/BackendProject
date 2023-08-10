@@ -34,11 +34,11 @@ urlpatterns = [
    # path('profile/', ProfileView.as_view(), name='profile'),
     path('upload/', UserProfilePictureView.as_view(), name='user_profile_picture'),
     path('info/', workInfoView.as_view(), name='work_Info_View'),
-     path('getinfo/', views.workget, name='work_Info_View'),
-      path('exitformdate/', views.ProductListView.as_view(), name='work_Info_Views'),
-       path('update/<int:auto_increment_id>/', views.ChecklistUpdateView.as_view(), name='checklist Updation'),
-
-
+    path('getinfo/', views.workget, name='work_Info_View'),
+    path('exitformdate/', views.ProductListView.as_view(), name='work_Info_Views'),
+    path('update/<int:auto_increment_id>/', views.ChecklistUpdateView.as_view(), name='checklist Updation'),
+    path('main_detail/<int:auto_increment_id>/', views.MainDetailView.as_view(), name='main detail'),
+    
 ]
 
 
