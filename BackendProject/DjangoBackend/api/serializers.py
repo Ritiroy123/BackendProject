@@ -12,7 +12,7 @@ from django.utils.encoding import smart_str, force_bytes, DjangoUnicodeDecodeErr
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework.serializers import Serializer
-from .models import checklist
+from .models import checklist,User
 
 #from .models import Image
 User = get_user_model()
@@ -48,23 +48,29 @@ class  RegisterSerializer(serializers.ModelSerializer):
     if password != password2:
       raise serializers.ValidationError("Password and Confirm Password doesn't match")
     return attrs
+   
   def create(self, validated_data):
+    email = validated_data['email']
+    password = validated_data['password']
+    if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError("User with this email already exists.")
     user = User.objects.create(
       email=validated_data['email'],
       name=validated_data['name'],
+
       phone_number=validated_data['phone_number']
       
 
     )
-    user.set_password(validated_data['password'])
-    token = jwt.encode({'user_id': user.id}, settings.SECRET_KEY, algorithm='HS256')
+    user.set_password(password)
+    '''token = jwt.encode({'user_id': user.id}, settings.SECRET_KEY, algorithm='HS256')
     send_mail(
             'Account Verification',
             f'Click the following link to verify your email: http://localhost:3000/login?token={token}',
             settings.EMAIL_HOST_USER,
             [user.email],
             fail_silently=False,
-        )
+        )'''
     
     user.save()
     return user
@@ -172,7 +178,8 @@ class UserPasswordResetSerializer(serializers.Serializer):
 class workInfoSerializer(serializers.ModelSerializer):
      class Meta:
         model = checklist
-        fields = '__all__'
+        fields = ('project_number','subcontractor_name','supervisor_name','project_location','worker_name','work_start_end_date','log_book_material','before_entry_bag_check','before_entry_clothing_and_appearance','before_entry_tools_and_equipments_check','physical_health','mental_health','before_entry_safety_helmet_check','before_entry_safety_shoes_check','before_entry_safety_jackets_check','before_entry_tobacco_and_alcohol','before_entry_ladders_health_check','material_logbook_check','before_entry_remark')
+      
 
 class getidSerializer(serializers.ModelSerializer):
     class Meta:
@@ -183,4 +190,4 @@ class getidSerializer(serializers.ModelSerializer):
 class detailsSerializer(serializers.ModelSerializer):
    class Meta:
       model = checklist
-      fields = ('project_number','subcontractor_name','supervisor_name','project_location','worker_name','work_start_end_date','log_book_material')
+      fields = ('work_place_orderliness','material_deposited_in_required_area','ladders_placement_check','before_exit_bag_check','before_exit_tools_and_equipments_check','before_exit_remark')

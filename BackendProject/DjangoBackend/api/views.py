@@ -108,7 +108,7 @@ def register_user(request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'Registered success.'}, status=status.HTTP_201_CREATED)
+            return Response({'message': 'Registered successfully.'}, status=status.HTTP_201_CREATED)
         return Response({'message': 'Email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
@@ -195,16 +195,31 @@ class workInfoView(APIView):
         
   def post(self, request,*args, **kwargs):
       
-      
-       #user = User.objects.get(id=user_id)
-       checklists = checklist.objects.all()
-     # checklists = checklist.objects.all()
+       posted_date = request.data.get('work_start_end_date')  # You need to replace 'date' with the actual field name
+
+        # Check if a record with the same date already exists
+       existing_record = checklist.objects.filter(work_start_end_date=posted_date).first()
+       
+       if existing_record:
+                existing_record_serializer = workInfoSerializer(existing_record)
+                return Response(
+                    {
+                        "error": "A record for this date already exists.",
+                        "existing_record": existing_record_serializer.data
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+        
+                )
        serializer = workInfoSerializer(data=request.data)
-       if serializer.is_valid(raise_exception=True):
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_200_OK)
-       else:
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+       try:
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+       except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+             
+      
+       
       
 #b=User(email="riti2345679@gmail.com",name="riti",phone_number="93546737")   
 #b.save()
@@ -216,17 +231,14 @@ class workInfoView(APIView):
 #a=checklist.objects.all()
 #print(a)
 @csrf_exempt
-def workget(request):
+def workget(request,auto_increment_id):
     if request.method == 'GET':
-        checklists = checklist.objects.all()
+        checklists = checklist.objects.all().values()
+        item = checklist.objects.get(auto_increment_id=auto_increment_id)
     
-        fields_to_include = ['project_number', 'subcontractor_name','supervisor_name','project_location','worker_name','work_start_end_date','log_book_material','before_entry_bag_check','before_entry_clothing_and_appearance','before_entry_tools_and_equipments_check','physical_health','mental_health','before_entry_safety_helmet_check','before_entry_safety_shoes_check','before_entry_safety_jackets_check','']  # List all desired fields
 
-        data = [
-            {field: getattr(item, field) for field in fields_to_include}
-            for item in checklists
-        ]
-        return JsonResponse(data, safe=False)
+        
+        return HttpResponse(checklists)
        
     if (request.method == "POST"):
         # Turn the body into a dict
@@ -254,14 +266,30 @@ class ProductListView(APIView):
 class ChecklistUpdateView(APIView):
         def put(self, request, *args, **kwargs):
             auto_increment_id = self.kwargs['auto_increment_id']
+            posted_date = request.data.get('work_start_end_date')  # You need to replace 'date' with the actual field name
+
+        # Check if a record with the same date already exists
+            existing_record = checklist.objects.filter(work_start_end_date=posted_date).first()
+
+            if existing_record:
+              existing_record_serializer = detailsSerializer(existing_record)
+              return Response(
+                    {
+                        "error": "A record for this date already exists.",
+                        "existing_record": existing_record_serializer.data
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
     
     
             checklists = checklist.objects.get(auto_increment_id=auto_increment_id)
             serializer = workInfoSerializer(checklists, data=request.data)
-            if serializer.is_valid():
+            try:
+              if serializer.is_valid(raise_exception=True):
                 serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)   
         
 
 class MainDetailView(APIView):
