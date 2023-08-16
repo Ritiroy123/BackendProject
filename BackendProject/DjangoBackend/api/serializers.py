@@ -191,3 +191,9 @@ class detailsSerializer(serializers.ModelSerializer):
    class Meta:
       model = checklist
       fields = ('work_place_orderliness','material_deposited_in_required_area','ladders_placement_check','before_exit_bag_check','before_exit_tools_and_equipments_check','before_exit_remark')
+
+
+class AllSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = checklist
+      fields = ('__all__')

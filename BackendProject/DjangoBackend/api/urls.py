@@ -37,7 +37,11 @@ urlpatterns = [
    # path('getinfo/<int:auto_increment_id>/', views.workget, name='work_Info_View'),
     path('exitformdate/', views.ProductListView.as_view(), name='work_Info_Views'),
     path('update/<int:auto_increment_id>/', views.ChecklistUpdateView.as_view(), name='checklist Updation'),
-    path('main_detail/<int:auto_increment_id>/', views.MainDetailView.as_view(), name='main detail'),
+    path('main_detail/<str:work_start_end_date>/', views.MainDetailView.as_view(), name='main detail'),
+    path('date_exists/<str:work_start_end_date>/', views.DateView.as_view(), name='main detail'),
+    path('alldata/', views.AllView.as_view(), name='All detail'),
+     path('evedata_exists/<str:work_start_end_date>/', views.EveDateView.as_view(), name='main detail'),
+
     
 ]
 

@@ -13,10 +13,11 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.http import JsonResponse,HttpResponse
 import requests
+from requests import request
 from rest_framework.generics import UpdateAPIView
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
-from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserPasswordChangeSerializer, UserPasswordResetSerializer,workInfoSerializer,getidSerializer,detailsSerializer
+from api.serializers import UserLoginSerializer,SendPasswordResetEmailSerializer, UserPasswordChangeSerializer, UserPasswordResetSerializer,workInfoSerializer,getidSerializer,detailsSerializer,AllSerializer
 from django.contrib.auth import authenticate
 from rest_framework.parsers import MultiPartParser, FormParser
 #from .models import Profile
@@ -28,6 +29,8 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
+from urllib.request import urlopen
+  
 
 User = get_user_model()
 
@@ -182,18 +185,19 @@ def webex_callback(request):
 class workInfoView(APIView):
   
   def get(self,request,*args, **kwargs):
-        
-        # Get the value  of the authenticated user
-            try:
+      
+       try:
+                
                # user = User.objects.get(id=user_id)
                 checklists = checklist.objects.all()
                 serializer = workInfoSerializer(checklists, many=True)
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            except User.DoesNotExist:
+       except User.DoesNotExist:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
         
   def post(self, request,*args, **kwargs):
+       
       
        posted_date = request.data.get('work_start_end_date')  # You need to replace 'date' with the actual field name
 
@@ -264,26 +268,12 @@ class ProductListView(APIView):
     
 
 class ChecklistUpdateView(APIView):
-        def put(self, request, *args, **kwargs):
+        
+    def put(self, request, *args, **kwargs):
             auto_increment_id = self.kwargs['auto_increment_id']
-            posted_date = request.data.get('work_start_end_date')  # You need to replace 'date' with the actual field name
-
-        # Check if a record with the same date already exists
-            existing_record = checklist.objects.filter(work_start_end_date=posted_date).first()
-
-            if existing_record:
-              existing_record_serializer = detailsSerializer(existing_record)
-              return Response(
-                    {
-                        "error": "A record for this date already exists.",
-                        "existing_record": existing_record_serializer.data
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-    
-    
+           
             checklists = checklist.objects.get(auto_increment_id=auto_increment_id)
-            serializer = workInfoSerializer(checklists, data=request.data)
+            serializer = detailsSerializer(checklists, data=request.data)
             try:
               if serializer.is_valid(raise_exception=True):
                 serializer.save()
@@ -293,11 +283,85 @@ class ChecklistUpdateView(APIView):
         
 
 class MainDetailView(APIView):
-  def get(self, request, auto_increment_id, format=None):
+  def get(self, request, work_start_end_date, format=None):
         try:
-            item = checklist.objects.get(auto_increment_id=auto_increment_id)
-            serializer = detailsSerializer(item)
+            item = checklist.objects.get(work_start_end_date=work_start_end_date)
+            serializer = workInfoSerializer(item)
             return Response(serializer.data)
         except checklist.DoesNotExist:
             return Response({"message": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
         
+
+class DateView(APIView):
+  def get(self, request, work_start_end_date, format=None):
+        try:
+            item = checklist.objects.get(work_start_end_date=work_start_end_date)
+            serializer = workInfoSerializer(item)
+            return Response(serializer.data)
+        except checklist.DoesNotExist:
+            return Response({"message": "date not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+
+
+class EveDateView(APIView):
+  def get(self, request, work_start_end_date, format=None):
+        try:
+            item = checklist.objects.get(work_start_end_date=work_start_end_date)
+            serializer = detailsSerializer(item)
+            return Response(serializer.data)
+        except checklist.DoesNotExist:
+            return Response({"message": "date not found"}, status=status.HTTP_404_NOT_FOUND)        
+          
+class AllView(APIView):
+     def get(self,request,*args, **kwargs):
+      
+       try:
+                
+               # user = User.objects.get(id=user_id)
+                checklists = checklist.objects.all()
+                serializer = AllSerializer(checklists,many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+       except User.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+   
+# storing the JSON response 
+# from url in data
+
+  
+# print the json response
+#print(data_json)
+url = "https://accounts.zoho.com/oauth/v2/token"
+
+payload={'grant_type': 'refresh_token',
+'client_id': '1000.4D0LT5YLPOKPGZ5IFJNVNYTP8IEVFN',
+'client_secret': '5addc71050ce2b59934d7ba04d977c3bca5e9e6b6e',
+'redirect_uri': 'https://www.google.com/',
+'refresh_token': '1000.37614442538599aa9ee078f097c04422.b8e995b721dd851709c3cd2c53bee7ec'}
+files=[
+
+]
+headers = { 'Content-Type': 'application/x-www-form-urlencoded'}
+
+response = requests.request("POST", url, headers=headers, data=payload, files=files)
+
+#print(response.json())
+
+
+
+def get_zoho_projects(request):
+    access_token = "1000.66fcebf99de7711783a21a1606df9060.9c44f1f01d2c9446e4075ed80de4c008"  # Retrieve from your authentication process
+
+   
+
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+    }
+    response = requests.get('https://projectsapi.zoho.com/restapi/portal/projects', headers=headers)
+
+    if response.status_code == 200:
+        projects = response.json()
+        project_names = [project['Project Name'] for project in projects['projects']]
+        # Now project_names contains a list of project names
+        print(project_names)
+    else:
+        print('Failed to retrieve project names')
