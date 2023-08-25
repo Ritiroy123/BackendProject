@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.db import models
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status
@@ -29,7 +30,9 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
-from urllib.request import urlopen
+
+from django.forms.models import model_to_dict
+from django.core.cache import cache
   
 
 User = get_user_model()
@@ -196,37 +199,20 @@ class workInfoView(APIView):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
         
-  def post(self, request,*args, **kwargs):
-       
-      
-       posted_date = request.data.get('work_start_end_date')  # You need to replace 'date' with the actual field name
-
-        # Check if a record with the same date already exists
-       existing_record = checklist.objects.filter(work_start_end_date=posted_date).first()
-       
-       if existing_record:
-                existing_record_serializer = workInfoSerializer(existing_record)
-                return Response(
-                    {
-                        "error": "A record for this date already exists.",
-                        "existing_record": existing_record_serializer.data
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-        
-                )
-       serializer = workInfoSerializer(data=request.data)
-       try:
+  def post(self, request, *args, **kwargs):
+     
+        serializer = workInfoSerializer(data=request.data)
+        try:
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
-       except Exception as e:
+        except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-             
-      
-       
+
+    
       
 #b=User(email="riti2345679@gmail.com",name="riti",phone_number="93546737")   
-#b.save()
+#b.save() 
 #a = checklist(project_name="qq",project_name1="a",project_location="a",project_location1="a",supervisor_name="q", subcontractor_name="a",work_start_date="2023-08-07",work_start_date1="2023-08-07",work_completion_date="2023-08-07",work_completion_date1="2023-08-07",wcp_esic_verification="Yes",aadhar_card_verification="Yes",before_entry_body_scanning="Yes",before_entry_bag_check="Yes",physical_appearance="Yes",before_entry_bag_tales_and_tool_check="Yes",before_entry_bag_mental_health_check="Yes",physical_health_check="Yes",before_entry_bag_behavioral_check="Yes",before_entry_bag_safety_helmet_check="Yes",before_entry_bag_safety_shoes_check="Yes",before_entry_bag_safety_jackets_check="Yes",ladders_health_check="Yes",work_place_check="Yes",work_place_cleanliness_check="Yes",balance_material_on_specified_area_check="Yes",ladders_placement_check="Yes",before_exit_body_scanning="Yes",before_exit_bag_check="Yes",before_exit_bag_tales_and_tool_check="Yes",before_exit_bag_mental_health_check="Yes",before_exit_bag_behavioral_check="Yes",before_exit_bag_safety_helmet_check="Yes",before_exit_bag_safety_shoes_check="Yes",before_exit_bag_safety_jackets_check="Yes",remark="ddd",user=b)
 #a =checklist.objects.filter(duplicate_id=0).count()
 #a= checklist.objects.get(pk = 1)
@@ -234,36 +220,39 @@ class workInfoView(APIView):
 #print(b)
 #a=checklist.objects.all()
 #print(a)
-@csrf_exempt
-def workget(request,auto_increment_id):
-    if request.method == 'GET':
-        checklists = checklist.objects.all().values()
-        item = checklist.objects.get(auto_increment_id=auto_increment_id)
+@api_view(['GET'])
+def workget(request,*args,**kwargs):
+   
+        checklists = checklist.objects.all()
+        
+        data = list(checklists)
+        
+        return Response(data)
+        
     
 
-        
-        return HttpResponse(checklists)
-       
-    if (request.method == "POST"):
-        # Turn the body into a dict
-        body = json.loads(request.body.decode("utf-8"))
-        #create the new item
-        newrecord = checklist.objects.create(item=body['item'])
-        # Turn the object to json to dict, put in array to avoid non-iterable error
-        data=json.loads(serializers.serialize('json', [newrecord]))
-        # send json response with new object
-        return JsonResponse(data, safe=False)
-
    
-class ProductListView(APIView):
-    def get(self, request, format=None):
-        seven_days_ago = timezone.now() - timedelta(days=2)
-        
-        # Filter checklist items with work_start_end_date within the last 7 days
-        items_within_7_days = checklist.objects.filter(work_start_end_date__gte=seven_days_ago)
-        
-        serializer = getidSerializer(items_within_7_days, many=True)
-        return Response(serializer.data)
+
+@api_view(['GET'])
+def get_checklists_for_current_date(request):
+    current_date = timezone.now() - timedelta(days=0)
+    checklists = checklist.objects.filter(work_start_end_date=current_date)
+    
+    completeness_data = []
+
+    for Checklist in checklists:
+        fields = Checklist._meta.get_fields()
+        is_all_filled = all(
+            getattr(Checklist, field.name) or isinstance(field, models.BooleanField)
+            for field in fields if isinstance(field, (models.TextField, models.BooleanField))
+        )
+        serializer = getidSerializer(Checklist)
+        completeness_data.append({
+            'data': serializer.data,
+            'completeness_status': is_all_filled
+        })
+
+    return Response(completeness_data)
 
     
 
@@ -283,10 +272,10 @@ class ChecklistUpdateView(APIView):
         
 
 class MainDetailView(APIView):
-  def get(self, request, work_start_end_date, format=None):
+  def get(self, request, auto_increment_id, format=None):
         try:
-            item = checklist.objects.get(work_start_end_date=work_start_end_date)
-            serializer = workInfoSerializer(item)
+            item = checklist.objects.get(auto_increment_id=auto_increment_id)
+            serializer = AllSerializer(item)
             return Response(serializer.data)
         except checklist.DoesNotExist:
             return Response({"message": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -303,14 +292,14 @@ class DateView(APIView):
         
 
 
-class EveDateView(APIView):
-  def get(self, request, work_start_end_date, format=None):
-        try:
-            item = checklist.objects.get(work_start_end_date=work_start_end_date)
-            serializer = detailsSerializer(item)
-            return Response(serializer.data)
-        except checklist.DoesNotExist:
-            return Response({"message": "date not found"}, status=status.HTTP_404_NOT_FOUND)        
+# class EveDateView(APIView):
+#   def get(self, request, work_start_end_date, format=None):
+#         try:
+#             item = checklist.objects.get(work_start_end_date=work_start_end_date)
+#             serializer = detailsSerializer(item)
+#             return Response(serializer.data)
+#         except checklist.DoesNotExist:
+#             return Response({"message": "date not found"}, status=status.HTTP_404_NOT_FOUND)        
           
 class AllView(APIView):
      def get(self,request,*args, **kwargs):
@@ -330,38 +319,125 @@ class AllView(APIView):
   
 # print the json response
 #print(data_json)
-url = "https://accounts.zoho.com/oauth/v2/token"
 
-payload={'grant_type': 'refresh_token',
-'client_id': '1000.4D0LT5YLPOKPGZ5IFJNVNYTP8IEVFN',
-'client_secret': '5addc71050ce2b59934d7ba04d977c3bca5e9e6b6e',
-'redirect_uri': 'https://www.google.com/',
-'refresh_token': '1000.37614442538599aa9ee078f097c04422.b8e995b721dd851709c3cd2c53bee7ec'}
-files=[
-
-]
-headers = { 'Content-Type': 'application/x-www-form-urlencoded'}
-
-response = requests.request("POST", url, headers=headers, data=payload, files=files)
 
 #print(response.json())
 
+class ZohoProjectsView(APIView):
+    def generate_access_token(self, refresh_token):
+        url = "https://accounts.zoho.com/oauth/v2/token"
+        payload={'grant_type': 'refresh_token',
+            'client_id': '1000.4D0LT5YLPOKPGZ5IFJNVNYTP8IEVFN',
+            'client_secret': '5addc71050ce2b59934d7ba04d977c3bca5e9e6b6e',
+            'redirect_uri': 'https://www.google.com/',
+            'refresh_token': '1000.37614442538599aa9ee078f097c04422.b8e995b721dd851709c3cd2c53bee7ec'}
+        response = requests.post(url, data=payload)
+        data = response.json()
+        if 'access_token' in data:
+            return data['access_token']
+        return None
+
+    def get(self,request,*args, **kwargs):
+        zoho_api_url = "https://projectsapi.zoho.com/restapi/portal/687895858/projects/"
+        refresh_token = "1000.37614442538599aa9ee078f097c04422.b8e995b721dd851709c3cd2c53bee7ec"
+
+        access_token = cache.get('zoho_access_token')
+
+        if access_token is None:
+            
+            access_token = self.generate_access_token(refresh_token)
+           
+               
+            cache.set('zoho_access_token', access_token, timeout=3600) # cache for 1 hour
+
+        
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            "Content-Type": "application/json"
+        }
+
+        
+        project_info = []
+        start = 0 
+        size = 200
+
+        while True:
+            params = {
+                "index": start,
+                "range": size
+            }
+
+            response = requests.get(zoho_api_url, headers=headers, params=params)
+            data = response.json()
+            total = data["projects"]
+            for project in total:
+                if project["status"] == "active":
+                    project_info.append({
+                        "name": project["name"],
+                        "owner_name": project["owner_name"]
+                    })
+
+            if len(total) < size:
+                break  
+            else:
+              start += size
+
+            
+        return Response(project_info)
 
 
-def get_zoho_projects(request):
-    access_token = "1000.66fcebf99de7711783a21a1606df9060.9c44f1f01d2c9446e4075ed80de4c008"  # Retrieve from your authentication process
 
-   
 
-    headers = {
-        'Authorization': f'Bearer {access_token}',
-    }
-    response = requests.get('https://projectsapi.zoho.com/restapi/portal/projects', headers=headers)
 
-    if response.status_code == 200:
-        projects = response.json()
-        project_names = [project['Project Name'] for project in projects['projects']]
-        # Now project_names contains a list of project names
-        print(project_names)
+@api_view(['GET'])
+def get_checklist_with_completeness(request, auto_increment_id):
+
+    try:
+        Checklist = checklist.objects.get(auto_increment_id=auto_increment_id)
+    except checklist.DoesNotExist:
+        return Response({'error': 'Checklist not found'}, status=404)
+
+    
+    fields = Checklist._meta.get_fields()
+
+    is_all_filled = all(
+        getattr(Checklist, field.name, '') or isinstance(field, models.BooleanField)
+        for field in fields if isinstance(field, (models.TextField, models.BooleanField))
+    )
+    if is_all_filled:
+        completeness_status = 'true'
     else:
-        print('Failed to retrieve project names')
+        completeness_status = 'false'
+
+
+    serializer = AllSerializer(Checklist)  # Use your serializer here
+
+    response_data = {
+        'data': serializer.data,
+        'all_fields_filled': is_all_filled
+    }
+    
+    return Response(response_data) 
+
+
+
+@api_view(['GET'])
+def get_checklist_data(request):
+    checklists = checklist.objects.all()
+    serialized_checklists = []
+
+    for Checklist in checklists:
+        checklist_data = getidSerializer(Checklist).data
+        all_fields = [
+            field.attname for field in Checklist._meta.fields
+            if field.attname not in ['auto_increment_id', 'created_at', 'updated_at', 'user', 'is_true']
+        ]
+        checklist_data['is_true'] = all(
+            getattr(Checklist, field, None) for field in all_fields
+        )
+        serialized_checklists.append(checklist_data)
+
+    return Response(serialized_checklists)
+
+
+

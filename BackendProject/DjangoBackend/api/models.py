@@ -117,6 +117,8 @@ class checklist(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     auto_increment_id = models.AutoField(primary_key=True,default=None)
     user = models.ForeignKey(User,on_delete=models.CASCADE,blank=True,null=True)
+    #is_true = models.BooleanField(default=False)
+
     def __str__(self):
       return self.project_number
 

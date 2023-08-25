@@ -184,7 +184,7 @@ class workInfoSerializer(serializers.ModelSerializer):
 class getidSerializer(serializers.ModelSerializer):
     class Meta:
         model = checklist
-        fields = ('auto_increment_id','work_start_end_date')     
+        fields = ('auto_increment_id','work_start_end_date','worker_name')     
         
 
 class detailsSerializer(serializers.ModelSerializer):
