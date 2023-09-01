@@ -30,6 +30,10 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
 
 from django.forms.models import model_to_dict
 from django.core.cache import cache
@@ -187,6 +191,7 @@ def webex_callback(request):
 
 class workInfoView(APIView):
   
+  
   def get(self,request,*args, **kwargs):
       
        try:
@@ -199,17 +204,42 @@ class workInfoView(APIView):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
         
+  
   def post(self, request, *args, **kwargs):
-     
         serializer = workInfoSerializer(data=request.data)
         try:
             if serializer.is_valid(raise_exception=True):
-                serializer.save()
+                if request.user.is_authenticated:
+                    user = request.user
+                else:
+                    return Response({"error": "User is not authenticated."}, status=status.HTTP_401_UNAUTHORIZED)
+
+                # Remove the check for 'user' in serializer.validated_data
+                # This allows users to post multiple times without overwriting the 'user' field
+                serializer.validated_data['user'] = user
+
+                work_info_instance = serializer.save()
+
+                user_email = work_info_instance.user.email
+
+                subject = 'New Work Information'
+                message = "new work"
+                from_email = 'ritiroy85257@gmail.com'
+                recipient_list = [user_email]
+
+                # Generate HTML content from the template
+                email_template = 'template.html'
+                email_context = {
+                    'post_details': serializer.data
+                }
+                html_message = render_to_string(email_template, email_context)
+                plain_message = strip_tags(html_message)  # Strip HTML for plain text version
+
+                send_mail(subject, plain_message, from_email, recipient_list, html_message=html_message, fail_silently=False)
+
                 return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    
       
 #b=User(email="riti2345679@gmail.com",name="riti",phone_number="93546737")   
 #b.save() 
@@ -263,13 +293,41 @@ class ChecklistUpdateView(APIView):
            
             checklists = checklist.objects.get(auto_increment_id=auto_increment_id)
             serializer = detailsSerializer(checklists, data=request.data)
+            other_serializer = workInfoSerializer(checklists,data=request.data)  # Replace with the actual serializer you're using
             try:
-              if serializer.is_valid(raise_exception=True):
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                if serializer.is_valid() and other_serializer.is_valid():
+                    if request.user.is_authenticated:
+                        user = request.user
+                    else:
+                        return Response({"error": "User is not authenticated."}, status=status.HTTP_401_UNAUTHORIZED)
+
+                    if 'user' not in serializer.validated_data:
+                       serializer.validated_data['user'] = user
+
+                    work_info_instance = serializer.save()
+
+                    user_email = work_info_instance.user.email
+
+                    subject = 'New Work Information'
+                    message = "new work"
+                    from_email = 'ritiroy85257@gmail.com'
+                    recipient_list = [user_email]
+
+                    # Generate HTML content from the template
+                    email_template = 'alldetail.html'
+                    email_context = {
+                        'evening_details': serializer.data,
+                        'morning_details':other_serializer.data
+                    }
+                    html_message = render_to_string(email_template, email_context)
+                    plain_message = strip_tags(html_message)  # Strip HTML for plain text version
+
+                    send_mail(subject, plain_message, from_email, recipient_list, html_message=html_message, fail_silently=False)
+
+                    return Response(serializer.data, status=status.HTTP_200_OK)
             except Exception as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)   
-        
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
 
 class MainDetailView(APIView):
   def get(self, request, auto_increment_id, format=None):
@@ -302,17 +360,23 @@ class DateView(APIView):
 #             return Response({"message": "date not found"}, status=status.HTTP_404_NOT_FOUND)        
           
 class AllView(APIView):
-     def get(self,request,*args, **kwargs):
+     
+         def get(self, request, *args, **kwargs):
+           # if request.user.is_authenticated:
+               # authenticated_user = request.user
+
+                try:
+                    # Retrieve checklists associated with the authenticated user
+                   # checklists = checklist.objects.filter(user=authenticated_user)
+                    checklists = checklist.objects.all()
+                    
+                    serializer = AllSerializer(checklists, many=True)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                except User.DoesNotExist:
+                    return Response(status=status.HTTP_404_NOT_FOUND)
+            # else:
+            #     return Response({"error": "User is not authenticated."}, status=status.HTTP_401_UNAUTHORIZED)
       
-       try:
-                
-               # user = User.objects.get(id=user_id)
-                checklists = checklist.objects.all()
-                serializer = AllSerializer(checklists,many=True)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-       except User.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-   
 # storing the JSON response 
 # from url in data
 
@@ -337,54 +401,50 @@ class ZohoProjectsView(APIView):
             return data['access_token']
         return None
 
-    def get(self,request,*args, **kwargs):
+    def get(self, request, *args, **kwargs):
         zoho_api_url = "https://projectsapi.zoho.com/restapi/portal/687895858/projects/"
         refresh_token = "1000.37614442538599aa9ee078f097c04422.b8e995b721dd851709c3cd2c53bee7ec"
 
         access_token = cache.get('zoho_access_token')
+        project_info = cache.get('project_info')
 
         if access_token is None:
-            
             access_token = self.generate_access_token(refresh_token)
-           
-               
-            cache.set('zoho_access_token', access_token, timeout=3600) # cache for 1 hour
+            cache.set('zoho_access_token', access_token, timeout=7200)  # cache for 1 hour
 
-        
-        headers = {
-            'Authorization': f'Bearer {access_token}',
-            "Content-Type": "application/json"
-        }
-
-        
-        project_info = []
-        start = 0 
-        size = 200
-
-        while True:
-            params = {
-                "index": start,
-                "range": size
+        if project_info is None:
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                "Content-Type": "application/json"
             }
+            start = 0
+            size = 200
+            total_projects = []
 
-            response = requests.get(zoho_api_url, headers=headers, params=params)
-            data = response.json()
-            total = data["projects"]
-            for project in total:
-                if project["status"] == "active":
-                    project_info.append({
-                        "name": project["name"],
-                        "owner_name": project["owner_name"]
-                    })
+            while True:
+                params = {
+                    "index": start,
+                    "range": size
+                }
 
-            if len(total) < size:
-                break  
-            else:
-              start += size
+                response = requests.get(zoho_api_url, headers=headers, params=params)
+                data = response.json()
+                total_projects.extend(data["projects"])
 
+                if len(data["projects"]) < size:
+                    break
+                else:
+                    start += size
+
+            active_projects = [
+                {"name": project["name"], "owner_name": project["owner_name"]}
+                for project in total_projects if project["status"] == "active"
+            ]
             
-        return Response(project_info)
+            project_info = {"projects": active_projects}
+            cache.set('project_info', project_info, timeout=7200)  # cache for 1 hour
 
+        return Response(project_info)
 
 
 

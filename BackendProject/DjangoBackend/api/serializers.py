@@ -176,6 +176,8 @@ class UserPasswordResetSerializer(serializers.Serializer):
     
 
 class workInfoSerializer(serializers.ModelSerializer):
+     #user = UserLoginSerializer(required=False) 
+     
      class Meta:
         model = checklist
         fields = ('project_number','subcontractor_name','supervisor_name','project_location','worker_name','work_start_end_date','log_book_material','before_entry_bag_check','before_entry_clothing_and_appearance','before_entry_tools_and_equipments_check','physical_health','mental_health','before_entry_safety_helmet_check','before_entry_safety_shoes_check','before_entry_safety_jackets_check','before_entry_tobacco_and_alcohol','before_entry_ladders_health_check','material_logbook_check','before_entry_remark')

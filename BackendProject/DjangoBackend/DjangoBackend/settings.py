@@ -211,6 +211,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
         'drf_social_oauth2.authentication.SocialAuthentication',
+        
     )
     
 }
@@ -245,7 +246,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "ritiroy85257@gmail.com"
-EMAIL_HOST_PASSWORD = "isklmbrksnqhajdf"
+EMAIL_HOST_PASSWORD = "dkzbvduerjefxqpd"
 
 WEBEX_CLIENT_ID = 'C3a01ef3a1d39871845e25385a390d648b324bd6e824752c7a409a6c596815202 '
 WEBEX_CLIENT_SECRET = ' 91d14a2b3eabcc082e5fc76ba0fa96790349aae3fddb0e9ee6a87b9afbb4a57c'
