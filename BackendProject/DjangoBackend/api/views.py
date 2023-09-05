@@ -222,7 +222,7 @@ class workInfoView(APIView):
 
                 user_email = work_info_instance.user.email
 
-                subject = 'New Work Information'
+                subject = 'New Worker Information'
                 message = "new work"
                 from_email = 'ritiroy85257@gmail.com'
                 recipient_list = [user_email]
@@ -360,22 +360,25 @@ class DateView(APIView):
 #             return Response({"message": "date not found"}, status=status.HTTP_404_NOT_FOUND)        
           
 class AllView(APIView):
-     
-         def get(self, request, *args, **kwargs):
-           # if request.user.is_authenticated:
-               # authenticated_user = request.user
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            authenticated_user = request.user
 
-                try:
-                    # Retrieve checklists associated with the authenticated user
-                   # checklists = checklist.objects.filter(user=authenticated_user)
-                    checklists = checklist.objects.all()
-                    
-                    serializer = AllSerializer(checklists, many=True)
-                    return Response(serializer.data, status=status.HTTP_200_OK)
-                except User.DoesNotExist:
-                    return Response(status=status.HTTP_404_NOT_FOUND)
-            # else:
-            #     return Response({"error": "User is not authenticated."}, status=status.HTTP_401_UNAUTHORIZED)
+            # Retrieve checklists associated with the authenticated user
+            checklists = checklist.objects.filter(user=authenticated_user)
+
+            # Serialize the checklists using your AllSerializer
+            serializer = AllSerializer(checklists, many=True)
+            
+            # Check if any checklists were found
+            if checklists.exists():
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({"message": "No checklists found for this user."}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"message": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+     
+         
       
 # storing the JSON response 
 # from url in data
